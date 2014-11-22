@@ -4,3 +4,5 @@ load
 monitor reset
 monitor halt
 
+b main.c:15
+
