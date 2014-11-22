@@ -2,6 +2,7 @@
 #include "stm32f4xx_adc.h"
 #include "stm32f4xx_gpio.h"
 #define ADC1_DR_ADDRESS 0x4001204C
+uint8_t value_s;
 uint8_t value[1024];
 
 int main(){
@@ -33,9 +34,9 @@ int main(){
 
     DMA_InitStructure.DMA_Channel = DMA_Channel_0; 
     DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_DR_ADDRESS;
-    DMA_InitStructure.DMA_Memory0BaseAddr =(unsigned int) &value;
+    DMA_InitStructure.DMA_Memory0BaseAddr =(unsigned int) &value_s;
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    DMA_InitStructure.DMA_BufferSize = 1024;
+    DMA_InitStructure.DMA_BufferSize = 1;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
