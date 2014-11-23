@@ -3,9 +3,21 @@
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_tim.h"
 #include "stm32f4xx_dac.h"
+#include "misc.h"
 #define ADC1_DR_ADDRESS 0x4001204C
 uint8_t value_s;
-uint8_t value[1024];
+volatile uint8_t value[1024];
+
+void TIM5_IRQHandler(void){
+    static uint8_t cc = 0;
+    if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET){
+        value[cc] = value[cc] << 1;
+        cc++;
+        if(cc >= 1024)
+            cc = 0;
+        TIM_ClearITPendingBit(TIM5, TIM_FLAG_Update);
+    }
+}
 
 int main(){
 
@@ -20,6 +32,7 @@ int main(){
     TIM_TimeBaseInitTypeDef    TIM_TimeBaseStructure;
     /* TIM2 Periph clock enable */
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 
     /* Time base configuration */
     TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
@@ -28,12 +41,29 @@ int main(){
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; 
     TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+    TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
+    TIM_TimeBaseStructure.TIM_Period = 0x01;
+    TIM_TimeBaseStructure.TIM_Prescaler = 4;
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; 
+    TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
+
+    NVIC_InitTypeDef NVIC_InitStructure;
+
+    NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 
     /* TIM2 TRGO selection */
     TIM_SelectOutputTrigger(TIM2, TIM_TRGOSource_Update);
   
     /* TIM2 enable counter */
     TIM_Cmd(TIM2, ENABLE);
+    TIM_Cmd(TIM5, ENABLE);
+
+    TIM_ITConfig(TIM5, TIM_IT_Update, ENABLE);
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
@@ -68,9 +98,9 @@ int main(){
 
     DMA_InitStructure.DMA_Channel = DMA_Channel_0; 
     DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_DR_ADDRESS;
-    DMA_InitStructure.DMA_Memory0BaseAddr =(unsigned int) &value;
+    DMA_InitStructure.DMA_Memory0BaseAddr =(unsigned int) value;
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    DMA_InitStructure.DMA_BufferSize = 256;
+    DMA_InitStructure.DMA_BufferSize = 1024;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -117,9 +147,9 @@ int main(){
     DMA_DeInit(DMA1_Stream6);
     DMA_InitStructure.DMA_Channel = DMA_Channel_7;  
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) 0x4000741C;
-    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) &value;
+    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) value;
     DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-    DMA_InitStructure.DMA_BufferSize = 256;
+    DMA_InitStructure.DMA_BufferSize = 1024;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -143,10 +173,7 @@ int main(){
     /* Enable DMA for DAC Channel2 */
     DAC_DMACmd(DAC_Channel_2, ENABLE);
 
-    uint8_t cc = 0;        
-    while(1){
-        cc++;
-    }
+    while(1);
 
     return 0;
 }
