@@ -56,6 +56,8 @@ int main(){
     ADC_InitStruct.ADC_ContinuousConvMode = DISABLE;
     ADC_InitStruct.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_Rising;
     ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T2_TRGO;
+    //ADC_InitStruct.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+    //ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
     ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;
     ADC_InitStruct.ADC_NbrOfConversion = 1;
     ADC_InitStruct.ADC_Resolution = ADC_Resolution_8b;
@@ -68,7 +70,7 @@ int main(){
     DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_DR_ADDRESS;
     DMA_InitStructure.DMA_Memory0BaseAddr =(unsigned int) &value;
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    DMA_InitStructure.DMA_BufferSize = 1024;
+    DMA_InitStructure.DMA_BufferSize = 256;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -112,12 +114,12 @@ int main(){
     DAC_Init(DAC_Channel_1, &DAC_InitStructure);
 
     /* DMA1_Stream5 channel7 configuration **************************************/
-    DMA_DeInit(DMA1_Stream5);
+    DMA_DeInit(DMA1_Stream6);
     DMA_InitStructure.DMA_Channel = DMA_Channel_7;  
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) 0x4000741C;
     DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) &value;
     DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-    DMA_InitStructure.DMA_BufferSize = 1024;
+    DMA_InitStructure.DMA_BufferSize = 256;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -136,15 +138,15 @@ int main(){
     /* Enable DAC Channel2 */
     DAC_Cmd(DAC_Channel_2, ENABLE);
     DAC_Cmd(DAC_Channel_1, ENABLE);
-    DAC_SetChannel1Data(DAC_Align_8b_R, value[0]);
+    DAC_SetChannel1Data(DAC_Align_8b_R, 0x20);
 
     /* Enable DMA for DAC Channel2 */
     DAC_DMACmd(DAC_Channel_2, ENABLE);
 
-
-    
-
-    while(1);   
+    uint8_t cc = 0;        
+    while(1){
+        cc++;
+    }
 
     return 0;
 }
