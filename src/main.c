@@ -14,6 +14,27 @@ int main(){
     DMA_InitTypeDef DMA_InitStructure;    
     GPIO_InitTypeDef      GPIO_InitStructure;
 
+    /* TIM2 Configuration ------------------------------------------------------*/
+    /* TIM2CLK = HCLK / 4 = SystemCoreClock /4 */
+  
+    TIM_TimeBaseInitTypeDef    TIM_TimeBaseStructure;
+    /* TIM2 Periph clock enable */
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+    /* Time base configuration */
+    TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
+    TIM_TimeBaseStructure.TIM_Period = 0x01;
+    TIM_TimeBaseStructure.TIM_Prescaler = 10;
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; 
+    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+
+    /* TIM2 TRGO selection */
+    TIM_SelectOutputTrigger(TIM2, TIM_TRGOSource_Update);
+  
+    /* TIM2 enable counter */
+    TIM_Cmd(TIM2, ENABLE);
+
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 
@@ -32,9 +53,9 @@ int main(){
     
     // ADC_StructInit 
     ADC_InitStruct.ADC_ScanConvMode = DISABLE;
-    ADC_InitStruct.ADC_ContinuousConvMode = ENABLE;
-    ADC_InitStruct.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
-    ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+    ADC_InitStruct.ADC_ContinuousConvMode = DISABLE;
+    ADC_InitStruct.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_Rising;
+    ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T2_TRGO;
     ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;
     ADC_InitStruct.ADC_NbrOfConversion = 1;
     ADC_InitStruct.ADC_Resolution = ADC_Resolution_8b;
@@ -64,7 +85,6 @@ int main(){
     ADC_Cmd(ADC1, ENABLE);
 
     ADC_DMACmd(ADC1, ENABLE);
-    ADC_SoftwareStartConv(ADC1);
 
     /* DMA1 clock and GPIOA clock enable (to be used with DAC) */
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1 | RCC_AHB1Periph_GPIOA, ENABLE);
@@ -78,31 +98,11 @@ int main(){
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-    /* TIM6 Configuration ------------------------------------------------------*/
-    /* TIM6CLK = HCLK / 4 = SystemCoreClock /4 */
-  
-    TIM_TimeBaseInitTypeDef    TIM_TimeBaseStructure;
-    /* TIM6 Periph clock enable */
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, ENABLE);
-
-    /* Time base configuration */
-    TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-    TIM_TimeBaseStructure.TIM_Period = 0x01;
-    TIM_TimeBaseStructure.TIM_Prescaler = 10;
-    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; 
-    TIM_TimeBaseInit(TIM6, &TIM_TimeBaseStructure);
-
-    /* TIM6 TRGO selection */
-    TIM_SelectOutputTrigger(TIM6, TIM_TRGOSource_Update);
-  
-    /* TIM6 enable counter */
-    TIM_Cmd(TIM6, ENABLE);
 
     DAC_InitTypeDef  DAC_InitStructure;
   
     /* DAC channel2 Configuration */
-    DAC_InitStructure.DAC_Trigger = DAC_Trigger_T6_TRGO;
+    DAC_InitStructure.DAC_Trigger = DAC_Trigger_T2_TRGO;
     DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
     DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Enable;
     DAC_Init(DAC_Channel_2, &DAC_InitStructure);
